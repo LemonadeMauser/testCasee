@@ -17,5 +17,9 @@ public class Comment {
     Long id;
     String text;
     @ManyToOne
+    @JoinColumn(name = "user_id")
     User author;
+    @ManyToOne
+    @JoinColumn(name = "task_id")
+    Task task;
 }

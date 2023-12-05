@@ -39,7 +39,6 @@ public class UserService {
     }
 
     public void reassignTask(Task updatedTask, User newExecutor) {
-
         User prevExecutor = updatedTask.getExecutor();
         List<Task> tasks = prevExecutor.getTasks();
         tasks.removeIf(task -> task.getExecutor().getId().equals(updatedTask.getExecutor().getId()));

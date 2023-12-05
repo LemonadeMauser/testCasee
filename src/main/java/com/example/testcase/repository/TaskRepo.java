@@ -14,6 +14,6 @@ import java.util.List;
 public interface TaskRepo extends JpaRepository<Task, Long> {
     List<Task> findAllByAuthor(User author, Pageable page);
 
-    @Query("SELECT t FROM Task t JOIN t.executors e WHERE :userId = e.id")
-    List<Task> findTasksByExecutorId(@Param("userId") Long userId, Pageable page);
+
+    List<Task> findAllTasksByExecutorId(@Param("executorId") Long executorId, Pageable page);
 }

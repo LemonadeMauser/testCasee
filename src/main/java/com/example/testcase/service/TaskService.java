@@ -11,12 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,26 +21,29 @@ public class TaskService {
     private final TaskRepo repo;
     private final ModelMapper mapper;
     private final UserService userService;
+    private Task task;
 
     public TaskDto save(TaskDto dto) {
-        return entityToDto(repo.save(dtoToEntity(dto)));
+        task = dtoToEntity(dto);
+        task.setStatus(Status.WAITING);
+        return entityToDto(repo.save(task));
     }
 
     public TaskDto getById(Long id) {
-        Task task = findByIdOrThrow(id);
+        task = findByIdOrThrow(id);
         return entityToDto(task);
     }
 
     public TaskDto updateTaskById(Long taskId, Long authorId, TaskDto dto) {
-        Task task = findByIdOrThrow(taskId);
+        task = findByIdOrThrow(taskId);
         accessCheck(task, authorId);
         if (dto.getMessage() != null) {
             task.setMessage(dto.getMessage());
         }
-        if (dto.getExecutor() != null) {
-            User user  = userService.findByIdOrThrow(dto.getExecutor().getId());
-            userService.reassignTask(task, user);
-            task.setExecutor(dto.getExecutor());
+        if (dto.getExecutorId() != null) {
+            User newExecutor  = userExistChecker(dto.getExecutorId());
+            userService.reassignTask(task, newExecutor);
+            task.setExecutor(newExecutor);
         }
         if (dto.getHeader() != null) {
             task.setHeader(dto.getHeader());
@@ -57,7 +56,7 @@ public class TaskService {
     }
 
     public TaskDto updateStatus(Long taskId, Long userId, Status status) {
-        Task task = findByIdOrThrow(taskId);
+        task = findByIdOrThrow(taskId);
         accessCheck(task, userId);
         User executor = task.getExecutor();
         if (!executor.getId().equals(userId)) {
@@ -69,14 +68,14 @@ public class TaskService {
     }
 
     public List<TaskDto> getTasksByAuthorId(Long authorId, Pageable page) {
-        User author = userService.findByIdOrThrow(authorId);
+        User author = userExistChecker(authorId);
         List<Task> tasks = repo.findAllByAuthor(author, page);
         return entityListToDtoList(tasks);
     }
 
     public List<TaskDto> getTasksByExecutorId(Long executorId, Pageable page) {
-        userService.findByIdOrThrow(executorId);
-        List<Task> tasks = repo.findTasksByExecutorId(executorId, page);
+        userExistChecker(executorId);
+        List<Task> tasks = repo.findAllTasksByExecutorId(executorId, page);
         return entityListToDtoList(tasks);
     }
 
@@ -91,16 +90,28 @@ public class TaskService {
         }
     }
 
-    public Task findByIdOrThrow(Long taskId) {
+    protected Task findByIdOrThrow(Long taskId) {
         return repo.findById(taskId).orElseThrow(() -> new NotFoundEx("NOT Found"));
     }
 
     private Task dtoToEntity(TaskDto dto) {
-        return mapper.map(dto, Task.class);
+        task = mapper.map(dto, Task.class);
+        User user = userExistChecker(dto.getAuthorId());
+        task.setAuthor(user);
+        user = userExistChecker(dto.getExecutorId());
+        task.setExecutor(user);
+        return task;
     }
 
     private TaskDto entityToDto(Task task) {
-        return mapper.map(task, TaskDto.class);
+        TaskDto dto = mapper.map(task, TaskDto.class);
+        dto.setAuthorId(task.getAuthor().getId());
+        dto.setExecutorId(task.getExecutor().getId());
+        return dto;
+    }
+
+    private User userExistChecker(Long userId) {
+        return userService.findByIdOrThrow(userId);
     }
 
     private List<TaskDto> entityListToDtoList(List<Task> tasks) {

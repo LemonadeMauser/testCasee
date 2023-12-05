@@ -13,10 +13,9 @@ import java.util.List;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TaskDto {
-    Long id;
     String message;
     String header;
     Priority priority;
-    User author;
-    User executor;
+    Long authorId;
+    Long executorId;
 }

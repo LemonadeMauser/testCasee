@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "tasks")
+@Table(name = "task")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Task {
     @Id
@@ -21,13 +21,15 @@ public class Task {
     Long id;
     String message;
     String header;
+    @Enumerated(EnumType.STRING)
     Status status;
+    @Enumerated(EnumType.STRING)
     Priority priority;
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "author_id")
     User author;
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "executor_id")
     User executor;
     @OneToMany
     List<Comment> comments;
