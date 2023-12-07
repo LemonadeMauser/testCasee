@@ -1,9 +1,6 @@
 package com.example.testcase.controller;
 
-import ch.qos.logback.core.rolling.helper.IntegerTokenConverter;
 import com.example.testcase.dto.TaskDto;
-import com.example.testcase.model.Task;
-import com.example.testcase.model.User;
 import com.example.testcase.model.enums.Status;
 import com.example.testcase.service.TaskService;
 import jakarta.validation.constraints.Positive;
@@ -16,11 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/task")
+@RequestMapping("/tasks")
 @Slf4j
 public class TaskController {
 
@@ -28,8 +24,10 @@ public class TaskController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TaskDto saveTask (@RequestBody TaskDto dto) {
-        return taskService.save(dto);
+    public TaskDto saveTask (@RequestHeader("X-SMedia-User-Id") Long requestSenderId,
+                             @RequestBody TaskDto dto) {
+        log.info("Received DTO: {}", dto);
+        return taskService.save(dto, requestSenderId);
     }
 
     @GetMapping("/{taskId}")
@@ -38,23 +36,23 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}")
-    public TaskDto updateById(@PathVariable Long taskId,
-                                  @RequestParam Long authorId,
-                                  @RequestBody TaskDto dto) {
-        return taskService.updateTaskById(taskId, authorId, dto);
+    public TaskDto updateById(@RequestHeader("X-SMedia-User-Id") Long requestSenderId,
+                              @PathVariable Long taskId,
+                              @RequestBody TaskDto dto) {
+        return taskService.updateTaskById(taskId, requestSenderId, dto);
     }
 
     @DeleteMapping("/{taskId}")
-    public void deleteById(@PathVariable Long taskId,
-                           @RequestParam Long userId) {
-        taskService.deleteById(taskId, userId);
+    public void deleteById(@RequestHeader("X-SMedia-User-Id") Long requestSenderId,
+                           @PathVariable Long taskId) {
+        taskService.deleteById(taskId, requestSenderId);
     }
 
     @PatchMapping("/status")
-    public TaskDto updateStatus(@RequestParam Long taskId,
-                                @RequestParam Long userID,
+    public TaskDto updateStatus(@RequestHeader("X-SMedia-User-Id") Long requestSenderId,
+                                @RequestParam Long taskId,
                                 @RequestParam Status status) {
-        return taskService.updateStatus(taskId, userID, status);
+        return taskService.updateStatus(taskId, requestSenderId, status);
     }
 
     @GetMapping("/author/{authorId}")
@@ -64,7 +62,6 @@ public class TaskController {
                                             @Positive @RequestParam(name = "size",
                                                     defaultValue = "20")Integer size) {
         Pageable page = PageRequest.of(from / size, size);
-        System.out.println("HIi");
         return taskService.getTasksByAuthorId(authorId, page);
     }
 

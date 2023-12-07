@@ -21,21 +21,21 @@ public class TaskService {
     private final TaskRepo repo;
     private final ModelMapper mapper;
     private final UserService userService;
-    private Task task;
 
-    public TaskDto save(TaskDto dto) {
-        task = dtoToEntity(dto);
+    public TaskDto save(TaskDto dto, Long authorId) {
+        dto.setAuthorId(authorId);
+        Task task = dtoToEntity(dto);
         task.setStatus(Status.WAITING);
         return entityToDto(repo.save(task));
     }
 
     public TaskDto getById(Long id) {
-        task = findByIdOrThrow(id);
+        Task  task = findByIdOrThrow(id);
         return entityToDto(task);
     }
 
     public TaskDto updateTaskById(Long taskId, Long authorId, TaskDto dto) {
-        task = findByIdOrThrow(taskId);
+        Task  task = findByIdOrThrow(taskId);
         accessCheck(task, authorId);
         if (dto.getMessage() != null) {
             task.setMessage(dto.getMessage());
@@ -56,11 +56,11 @@ public class TaskService {
     }
 
     public TaskDto updateStatus(Long taskId, Long userId, Status status) {
-        task = findByIdOrThrow(taskId);
-        accessCheck(task, userId);
+        Task task = findByIdOrThrow(taskId);
         User executor = task.getExecutor();
-        if (!executor.getId().equals(userId)) {
-            throw new AccessEx("User with ID " + userId + " is not an executor for this task");
+        if (!executor.getId().equals(userId) & !task.getAuthor().getId().equals(userId)) {
+            throw new AccessEx("Пользователь с userID " + userId + " не является исполнителем " +
+                    "или автором задания номер - " + taskId + "  и не может изменить его статус.");
         }
         task.setStatus(status);
 
@@ -86,16 +86,17 @@ public class TaskService {
 
     private void accessCheck(Task task, Long authorId) {
         if (!task.getAuthor().getId().equals(authorId)) {
-            throw new AccessEx("u dont have a nihu9");
+            throw new AccessEx("У вас не достаточно прав для этого действия.");
         }
     }
 
     protected Task findByIdOrThrow(Long taskId) {
-        return repo.findById(taskId).orElseThrow(() -> new NotFoundEx("NOT Found"));
+        return repo.findById(taskId).orElseThrow(() -> new NotFoundEx("Задание с taskId =" +
+                taskId +" не найдено."));
     }
 
     private Task dtoToEntity(TaskDto dto) {
-        task = mapper.map(dto, Task.class);
+        Task task = mapper.map(dto, Task.class);
         User user = userExistChecker(dto.getAuthorId());
         task.setAuthor(user);
         user = userExistChecker(dto.getExecutorId());

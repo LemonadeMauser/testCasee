@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "comment")
