@@ -2,7 +2,6 @@ package com.example.testcase.controller;
 
 import com.example.testcase.dto.CommentDto;
 import com.example.testcase.service.CommentService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;

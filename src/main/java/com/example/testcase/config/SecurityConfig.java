@@ -3,7 +3,6 @@ package com.example.testcase.config;
 
 import com.example.testcase.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -38,17 +37,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authz) -> {
                     try {
                         authz
-                                .anyRequest().permitAll();
-//                                .requestMatchers("/users/**").hasRole("USER")
-//                                .requestMatchers("/tasks/**").hasRole("USER")
-//                                .requestMatchers("/comments/**").hasRole("USER")
-//                                .anyRequest().permitAll()
-//                                .and()
-//                                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                                .and()
-//                                .exceptionHandling()
-//                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-//                                .and().addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                                //.anyRequest().permitAll();
+                                .requestMatchers("/users/**").hasRole("USER")
+                                .requestMatchers("/tasks/**").hasRole("USER")
+                                .requestMatchers("/comments/**").hasRole("USER")
+                                .anyRequest().permitAll()
+                                .and()
+                                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                .and()
+                                .exceptionHandling()
+                                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                                .and().addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
